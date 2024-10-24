@@ -29,8 +29,8 @@
 ;; SOFTWARE.
 
 ;;; Commentary:
-;;; org-excalidraw.el is a package to for embedding excalidraw drawings into Emacs.
-;;; it adds an org-mode link type for excalidraw files to support inline display
+;;; org-excalidraw.el is a package for embedding excalidraw drawings into Emacs.
+;;; It adds an org-mode link type for excalidraw files to support inline display
 ;;; and opening the diagrams from Emacs for editing.
 
 ;;; Code:
@@ -79,17 +79,16 @@
   "Construct shell cmd for converting excalidraw file with PATH to svg."
   (concat "excalidraw_export --rename_fonts=true " (format "\"%s\"" path)))
 
-(defun org-excalidraw--shell-cmd-open (path os-type)
-  "Construct shell cmd to open excalidraw file with PATH for OS-TYPE."
-  (if (eq os-type 'darwin)
-      (concat "open " (shell-quote-argument path))
-    (concat "xdg-open " (shell-quote-argument path))))
+(defun org-excalidraw--shell-cmd-open (path)
+  "Construct shell cmd to open excalidraw file with PATH."
+  ;; Use 'open-excalidraw' command on Debian
+  (concat "open-excalidraw " (shell-quote-argument path)))
 
 (defun org-excalidraw--open-file-from-svg (path)
   "Open corresponding .excalidraw file for svg located at PATH."
   (let ((excal-file-path (string-remove-suffix ".svg" path)))
     (org-excalidraw--validate-excalidraw-file excal-file-path)
-    (shell-command (org-excalidraw--shell-cmd-open excal-file-path system-type))))
+    (shell-command (org-excalidraw--shell-cmd-open excal-file-path))))
 
 (defun org-excalidraw--handle-file-change (event)
   "Handle file update EVENT to convert files to svg."
@@ -98,37 +97,34 @@
       (when (string-suffix-p ".excalidraw" filename)
         (shell-command (org-excalidraw--shell-cmd-to-svg filename))))))
 
-;;;###
-;;;autoload
+;;;###autoload
 (defun org-excalidraw-create-drawing ()
   "Create an excalidraw drawing and insert an 'org-mode' link to it at Point."
   (interactive)
   (let* ((filename (format "%s.excalidraw" (org-id-uuid)))
          (path (expand-file-name filename org-excalidraw-directory))
-         (link (format "[[excalidraw:%s.svg]]" path)))
+         (svg-path (concat (file-name-sans-extension path) ".svg"))
+         (link (format "[[file:%s]]" svg-path)))
     (org-excalidraw--validate-excalidraw-file path)
-    (insert link)
+    (insert link) ;; Insert the link to the SVG in the org file
     (with-temp-file path (insert org-excalidraw-base))
-    (shell-command (org-excalidraw--shell-cmd-open path system-type))))
-
+    (shell-command (org-excalidraw--shell-cmd-open path)))) ;; Open the blank file for editing in Excalidraw
 
 ;;;###autoload
 (defun org-excalidraw-initialize ()
-  "Setup excalidraw.el. Call this after 'org-mode initialization."
+  "Setup excalidraw.el. Call this after 'org-mode' initialization."
   (interactive)
   (unless (file-directory-p org-excalidraw-directory)
     (error
      "Excalidraw directory %s does not exist"
      org-excalidraw-directory))
   (file-notify-add-watch org-excalidraw-directory '(change) 'org-excalidraw--handle-file-change)
-  (org-link-set-parameters "excalidraw"
-                           :follow 'org-excalidraw--open-file-from-svg
+  (org-link-set-parameters "file" ;; Use "file" link type to display SVG inline
                            :image-data-fun (lambda (_protocol link _desc)
                                              (with-temp-buffer (insert-file-contents-literally link)
                                                                (buffer-substring-no-properties
                                                                 (point-min)
                                                                 (point-max))))))
-
 
 (provide 'org-excalidraw)
 ;;; org-excalidraw.el ends here

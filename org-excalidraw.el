@@ -83,7 +83,6 @@
   "Construct shell cmd to open excalidraw file with PATH for OS-TYPE."
   (if (eq os-type 'darwin)
       (concat "open " (shell-quote-argument path))
-    (message "Debug: Generated shell command: %s" (shell-quote-argument path))
     (concat "open-excalidraw " (shell-quote-argument path))))
 
 (defun org-excalidraw--open-file-from-svg (path)
@@ -93,11 +92,14 @@
     (shell-command (org-excalidraw--shell-cmd-open excal-file-path system-type))))
 
 (defun org-excalidraw--handle-file-change (event)
-  "Handle file update EVENT to convert files to svg."
-  (when (string-equal (cadr event)  "renamed")
-    (let ((filename (cadddr event)))
+  "Handle file update EVENT to convert files to svg and resize inline images."
+  (when (memq (cadr event) '(changed renamed))
+    (let ((filename (if (eq (cadr event) 'changed)
+                        (caddr event)
+                      (cadddr event))))
       (when (string-suffix-p ".excalidraw" filename)
-        (shell-command (org-excalidraw--shell-cmd-to-svg filename))))))
+        (shell-command (org-excalidraw--shell-cmd-to-svg filename))
+        (iimage-resize)))))
 
 ;;;###
 ;;;autoload
@@ -129,7 +131,6 @@
                                                                (buffer-substring-no-properties
                                                                 (point-min)
                                                                 (point-max))))))
-
 
 (provide 'org-excalidraw)
 ;;; org-excalidraw.el ends here

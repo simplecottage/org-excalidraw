@@ -1,5 +1,25 @@
 # org-excalidraw
 
+## Fork fixes
+
+ - Opening the correct excalidraw file and not the cached one in the PWA
+ - Handling file events
+
+### Adding the open-excalidraw command
+
+- 1) Find the application name :
+
+  `ls ~/.local/share/applications`
+
+  It should be `chrome-<ID>.desktop`
+
+- 2) Update the `ID` in `open-excalidraw.sh`
+
+- 3) Paste the script in `/usr/bin`
+
+  `cp open-excalidraw.sh /usr/bin/open-excalidraw`
+
+
 ## Introduction
 
 `org-excalidraw` is a tiny package for managing [excalidraw](https://www.excalidraw.com) drawings in org-mode.

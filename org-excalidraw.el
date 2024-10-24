@@ -83,6 +83,7 @@
   "Construct shell cmd to open excalidraw file with PATH for OS-TYPE."
   (if (eq os-type 'darwin)
       (concat "open " (shell-quote-argument path))
+    (message "Debug: Generated shell command: %s" (shell-quote-argument path))
     (concat "open-excalidraw " (shell-quote-argument path))))
 
 (defun org-excalidraw--open-file-from-svg (path)

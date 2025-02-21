@@ -4,6 +4,7 @@
 
  - Opening the correct excalidraw file and not the cached one in the PWA
  - Handling file events
+ - Redo from sratch
 
 ### Adding the open-excalidraw command
 
